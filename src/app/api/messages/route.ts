@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import mongoose from "mongoose";
 import Announcement from "@/database/announcementSchema";
 import s3 from "@/app/api/tree/aws";
+import connectDB from "@/database/db";
 
-async function connectDB() {
-  if (mongoose.connection.readyState === 0) {
-    await mongoose.connect(process.env.MONGODB_URI!);
-  }
-}
+export const runtime = "nodejs";
 
 // new announcement
 

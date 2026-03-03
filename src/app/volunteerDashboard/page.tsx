@@ -27,19 +27,28 @@ export default function VolunteerDashboard() {
   const [announcements, setAnnouncements] = useState<IAnnouncement[]>([]);
   const [filteredAnnouncements, setFitleredAnnouncements] = useState<IAnnouncement[]>([]);
   const [userData, setUserData] = useState<UserData | null>(null);
+  const normalize = (value?: string | null) => (value || "").trim().toLowerCase();
 
-  const checkIfRecipient = (message: { to: Array<string> }) => {
-    for (const recipient of message.to) {
-      if (user?.primaryEmailAddress?.emailAddress == recipient) {
-        return true;
-      }
-    }
-    return false;
+  const checkIfRecipient = (message: { to: Array<string> | string }) => {
+    const userEmail = normalize(user?.primaryEmailAddress?.emailAddress);
+    const userFullName = normalize(user?.fullName);
+    if (!userEmail && !userFullName) return false;
+
+    const recipients = Array.isArray(message?.to)
+      ? message.to
+      : typeof message?.to === "string"
+        ? message.to.split(",")
+        : [];
+
+    return recipients.some((recipient) => {
+      const normalizedRecipient = normalize(String(recipient));
+      return normalizedRecipient === userEmail || normalizedRecipient === userFullName;
+    });
   };
 
   useEffect(() => {
     setFitleredAnnouncements(announcements.filter((announcement) => checkIfRecipient(announcement)));
-  }, [announcements]);
+  }, [announcements, user?.primaryEmailAddress?.emailAddress, user?.fullName]);
 
   useEffect(() => {
     setIsClient(true);

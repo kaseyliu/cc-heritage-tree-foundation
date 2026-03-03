@@ -84,14 +84,22 @@ function Messages() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [senderProfiles, setSenderProfiles] = useState<{ [key: string]: string }>({});
+  const normalize = (value?: string | null) => (value || "").trim().toLowerCase();
 
   const fetchMessages = async () => {
     try {
       const response = await fetch("/api/messages");
+      if (!response.ok) {
+        throw new Error(`Failed to fetch messages: ${response.status}`);
+      }
       const data = await response.json();
-      setMessages(data.reverse());
+      if (!Array.isArray(data)) {
+        throw new Error("Invalid messages payload");
+      }
+      setMessages([...data].reverse());
     } catch (error) {
       console.error("Failed to fetch messages:", error);
+      setMessages([]);
     } finally {
       setLoading(false);
     }
@@ -116,14 +124,27 @@ function Messages() {
     }
   }, [messages, user]);
 
-  const checkIfRecipient = (message: { to: Array<string> }) => {
-    for (const recipient of message.to) {
-      if (user?.primaryEmailAddress?.emailAddress == recipient) {
-        return true;
-      }
-    }
-    return false;
+  const checkIfRecipient = (message: { to: Array<string> | string }) => {
+    const userEmail = normalize(user?.primaryEmailAddress?.emailAddress);
+    const userFullName = normalize(user?.fullName);
+    if (!userEmail && !userFullName) return false;
+
+    const recipients = Array.isArray(message?.to)
+      ? message.to
+      : typeof message?.to === "string"
+        ? message.to.split(",")
+        : [];
+
+    return recipients.some((recipient) => {
+      const normalizedRecipient = normalize(String(recipient));
+      return normalizedRecipient === userEmail || normalizedRecipient === userFullName;
+    });
   };
+
+  useEffect(() => {
+    setIsClient(true);
+    fetchMessages();
+  }, []);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -132,6 +153,9 @@ function Messages() {
       try {
         const email = user.primaryEmailAddress.emailAddress;
         const res = await fetch(`/api/user/${email}`);
+        if (!res.ok) {
+          throw new Error(`Failed to fetch user data: ${res.status}`);
+        }
         const data = await res.json();
         setUserData(data);
       } catch (error) {
@@ -140,14 +164,19 @@ function Messages() {
     };
 
     fetchUserData();
-    setIsClient(true);
-    fetchMessages();
-  }, []);
+  }, [isLoaded, user?.primaryEmailAddress?.emailAddress]);
 
   useEffect(() => {
-    setFilteredMessages(messages.filter((message) => checkIfRecipient(message)));
-    setAdminMessages(messages.filter((message) => message.from == user?.fullName));
-  }, [messages]);
+    if (!user?.primaryEmailAddress?.emailAddress) {
+      setFilteredMessages([]);
+      setAdminMessages([]);
+      return;
+    }
+
+    const isViewingAsAdmin = isAdmin && localStorage.getItem("globalUserRole") === "Admin";
+    setFilteredMessages(isViewingAsAdmin ? messages : messages.filter((message) => checkIfRecipient(message)));
+    setAdminMessages(messages.filter((message) => normalize(message.from) === normalize(user?.fullName)));
+  }, [messages, user?.primaryEmailAddress?.emailAddress, user?.fullName]);
 
   useEffect(() => {
     const fetchSenderProfiles = async () => {
