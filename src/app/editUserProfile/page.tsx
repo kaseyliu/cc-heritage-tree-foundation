@@ -245,9 +245,13 @@ export default function EditUserProfile() {
       }
 
       // If we get here, both updates succeeded
-      showToast("Profile updated successfully in both systems!", "success");
+      showToast("Profile updated successfully", "success");
       if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("profile-photo-updated", { detail: { url: profileURL } }));
+        window.dispatchEvent(
+          new CustomEvent("profile-photo-updated", {
+            detail: { url: profileURL, name: updatedFields.name || name },
+          }),
+        );
       }
 
       // Update the original data to reflect the changes

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { SignedIn, useUser } from "@clerk/nextjs";
-import { Flex, Box, Image } from "@chakra-ui/react";
+import { Flex, Box, Image, Avatar } from "@chakra-ui/react";
 import UserCardPopover from "./UserCardPopUp";
 import { isMobile } from "react-device-detect";
 import { useState, useEffect } from "react";
@@ -18,6 +18,7 @@ interface UserData {
 export default function ProfileCard() {
   const { user, isLoaded } = useUser();
   const [userData, setUserData] = useState<UserData | null>(null);
+  const hasCustomProfileURL = (url?: string) => !!url && url.trim() !== "" && url !== "/pfp.png";
   let role = null;
   if (isLoaded && user) {
     role = user.organizationMemberships?.[0]?.role;
@@ -87,11 +88,10 @@ export default function ProfileCard() {
             alignItems="center"
             gap="5"
           >
-            <Image
-              src={userData?.profileURL ? userData?.profileURL : "/pfp.png"}
-              alt="User Profile"
+            <Avatar
+              src={hasCustomProfileURL(userData?.profileURL) ? userData?.profileURL : undefined}
+              name={`${user?.firstName || ""} ${user?.lastName || ""}`.trim()}
               boxSize="32px"
-              borderRadius="50%"
             />
             <Flex direction="column">
               <div>

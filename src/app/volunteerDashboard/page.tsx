@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Box, Grid, GridItem, Text, Button, HStack, VStack, Link, IconButton, Image } from "@chakra-ui/react";
+import { Box, Grid, GridItem, Text, Button, HStack, VStack, Link, IconButton, Image, Avatar } from "@chakra-ui/react";
 import { Plus, ArrowUpRight, EllipsisVertical, Menu } from "lucide-react";
 import { ITree } from "@/database/treeSchema";
 import Map from "@/components/Map";
@@ -269,16 +269,15 @@ export default function VolunteerDashboard() {
                             onClick={() => router.push(`/messages?id=${announcement._id}`)}
                           >
                             <HStack position={"relative"} w="100%">
-                              <Image
+                              <Avatar
                                 {...Box2AnnStyle}
-                                fit="cover"
-                                alt="Profile Picture Not Appearing"
+                                name={announcement.from}
                                 src={
                                   userData?.profileURL && announcement.from === userData.name
                                     ? userData.profileURL
-                                    : "/pfp.png"
+                                    : undefined
                                 }
-                              ></Image>
+                              />
                               <Text {...TextAnnStyle}> {announcement.subject} </Text>
                             </HStack>
                           </Box>
@@ -408,14 +407,13 @@ export default function VolunteerDashboard() {
                             onClick={() => router.push(`/messages?id=${announcement._id}`)}
                           >
                             <HStack position={"relative"} w="100%">
-                              <Image
+                              <Avatar
                                 {...Box2AnnStyle}
-                                fit="cover"
-                                alt="Profile Picture Not Appearing"
+                                name={announcement.from}
                                 src={
                                   userData?.profileURL && announcement.from === userData.name
                                     ? userData.profileURL
-                                    : "/pfp.png"
+                                    : undefined
                                 }
                               />
                               <Text {...TextAnnStyle}> {announcement.subject} </Text>

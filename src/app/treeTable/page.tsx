@@ -16,6 +16,7 @@ import {
   Box,
   Button,
   Image,
+  Avatar,
   Spinner,
   VStack,
   Flex,
@@ -60,6 +61,7 @@ export default function TreeTable() {
   const paginatedTrees = filteredTrees.slice(idxFirstTree, idxLastTree);
   const [profileURL, setProfileURL] = useState("");
   const [collectorProfiles, setCollectorProfiles] = useState<{ [key: string]: string }>({});
+  const hasCustomProfileURL = (url?: string) => !!url && url.trim() !== "" && url !== "/pfp.png";
 
   // fetch trees
   const [isClient, setIsClient] = useState(false);
@@ -155,12 +157,15 @@ export default function TreeTable() {
               const profileRes = await fetch(`/api/user/by-name/${encodedName}`);
               if (profileRes.ok) {
                 const profileData = await profileRes.json();
-                return { name: collectorName, profileURL: profileData.profileURL || "/pfp.png" };
+                return {
+                  name: collectorName,
+                  profileURL: hasCustomProfileURL(profileData.profileURL) ? profileData.profileURL : "",
+                };
               }
             } catch (error) {
               console.error(`Failed to fetch profile for ${collectorName}:`, error);
             }
-            return { name: collectorName, profileURL: "/pfp.png" };
+            return { name: collectorName, profileURL: "" };
           });
 
           const profileResults = await Promise.all(profilePromises);
@@ -506,13 +511,11 @@ export default function TreeTable() {
                                     <Td>{new Date(tree.dateCollected).toLocaleDateString()}</Td>
                                     <Td>
                                       <HStack align="center">
-                                        <Image
-                                          borderRadius="full"
-                                          fit="cover"
-                                          alt="Profile Picture"
+                                        <Avatar
+                                          name={tree.collectorName}
                                           boxSize={8}
-                                          src={collectorProfiles[tree.collectorName] || "/pfp.png"}
-                                        ></Image>
+                                          src={collectorProfiles[tree.collectorName] || undefined}
+                                        />
                                         <Text>{tree.collectorName}</Text>
                                       </HStack>
                                     </Td>

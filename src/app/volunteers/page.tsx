@@ -53,6 +53,7 @@ function Volunteers() {
   }
 
   const isAdmin = role === "org:admin";
+  const hasCustomProfileURL = (url?: string) => !!url && url.trim() !== "" && url !== "/pfp.png";
   useEffect(() => {
     if (isLoaded && !isAdmin) {
       router.push("/volunteerDashboard");
@@ -91,12 +92,15 @@ function Volunteers() {
             const profileRes = await fetch(`/api/user/by-name/${encodedName}`);
             if (profileRes.ok) {
               const profileData = await profileRes.json();
-              return { name: volunteer.name, profileURL: profileData.profileURL || "/pfp.png" };
+              return {
+                name: volunteer.name,
+                profileURL: hasCustomProfileURL(profileData.profileURL) ? profileData.profileURL : "",
+              };
             }
           } catch (error) {
             console.error(`Failed to fetch profile for ${volunteer.name}:`, error);
           }
-          return { name: volunteer.name, profileURL: "/pfp.png" };
+          return { name: volunteer.name, profileURL: "" };
         });
 
         const profileResults = await Promise.all(profilePromises);
@@ -271,7 +275,7 @@ function Volunteers() {
                                 <Td>
                                   <Flex align="center" gap={3}>
                                     <Avatar
-                                      src={volunteerProfiles[user.name] || "/pfp.png"}
+                                      src={volunteerProfiles[user.name] || undefined}
                                       name={user.name}
                                       size="sm"
                                     />
