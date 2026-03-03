@@ -45,7 +45,7 @@ export default function TreeTable() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredTrees, setFilteredTrees] = useState<ITree[]>([]);
   const [trees, setTrees] = useState<ITree[]>([]);
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
 
   const searchParams = useSearchParams();
   const defaultSetting = searchParams.get("sorted");
@@ -104,7 +104,7 @@ export default function TreeTable() {
   };
 
   useEffect(() => {
-    if (!user) return; // Exit early if no user
+    if (!isLoaded || !user) return; // Exit early if user isn't ready
 
     console.log("User available:", user);
 
@@ -118,12 +118,22 @@ export default function TreeTable() {
 
         setProfileURL(userData.profileURL);
 
-        // Fetch trees based on role
+        // Fetch trees based on role:
+        // Clerk org admin is the source of truth for admin privileges.
+        const clerkRole = user.organizationMemberships?.[0]?.role;
+        const isClerkAdmin = clerkRole === "org:admin";
+        const uiRole = localStorage.getItem("globalUserRole");
+
+        // For admins: allow role-switch behavior via localStorage.
+        // For non-admins: always treat as volunteer.
+        const actingAsVolunteer = isClerkAdmin ? uiRole === "Volunteer" : true;
+
+        // Fetch trees based on effective role
         let apiString: string;
 
-        if (userData?.role === "Volunteer" || localStorage.getItem("globalUserRole") == "Volunteer") {
+        if (actingAsVolunteer) {
           apiString = `/api/tree?collectorName=${user.fullName}`;
-        } else if (userData?.role === "Admin") {
+        } else if (isClerkAdmin || userData?.role === "Admin") {
           apiString = "/api/tree";
         } else {
           throw new Error("Role not found");
@@ -173,7 +183,7 @@ export default function TreeTable() {
     };
 
     fetchData();
-  }, [user]);
+  }, [user, isLoaded]);
 
   const handlePageChange = (pageNumber: number) => {
     if (pageNumber >= 1 && pageNumber <= totalPages) {
