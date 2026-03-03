@@ -6,8 +6,8 @@ A data collection platform for tree information and location
 
 - [Overview](#overview)
   - [Purpose](#purpose)
-  - [Team](#team)
-- [Getting Started And Contributing](#getting-started-and-contributing)
+- [Getting Started And Architecture](#getting-started-and-architecture)
+- [Team](#team)
 
 ## Overview
 
@@ -18,6 +18,12 @@ The Central Coast Heritage Tree Foundation focuses on the protection, preservati
 The goal is to create a user-friendly interface that allows volunteers to collect and enter tree inventory data directly into a digital system. This data will then be displayed on an interactive map, accessible to other volunteers with permissions, and available for public viewing on the website.
 
 Additionally, the organization would like the application to feature an interactive map showcasing all heritage trees in the area. Users will be able to look up existing trees, explore their history, and use this information to make informed decisions about future planting locations.
+
+## Getting Started And Architecture
+
+Visit [architecture.md](docs/architecture.md) for info about this repo's system design/architecture.
+
+Visit [getting-started.md](docs/getting-started.md) on info for how to set up this repo.
 
 ### Team
 
@@ -37,8 +43,3 @@ The Central Coast Heritage Tree Foundation team consists of 14 Cal Poly students
 - [Jodi Yamane](https://www.linkedin.com/in/jodi-yamane-615708253?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_contact_details%3BpnOSh4HiQrebNTSHpbL7KQ%3D%3D) - Software Developer
 - [Brandon Eng](https://www.linkedin.com/) - Software Developer
 - [Thomas Le](https://www.linkedin.com/) - Software Developer
-
-## Getting Started And Contributing
-Visit [architecture.md](docs/architecture.md) for info about this repo's system design/architecture.
-
-Visit [getting-started.md](docs/getting-started.md) on info for how to set up this repo.
