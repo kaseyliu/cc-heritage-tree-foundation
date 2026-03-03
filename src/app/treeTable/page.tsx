@@ -41,11 +41,12 @@ import Link from "next/link";
 import DeletePopUp from "@/components/DeletePopUp";
 
 export default function TreeTable() {
+  type TreeRow = ITree & { collectorProfileURL?: string };
   const toast = useToast();
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredTrees, setFilteredTrees] = useState<ITree[]>([]);
-  const [trees, setTrees] = useState<ITree[]>([]);
+  const [filteredTrees, setFilteredTrees] = useState<TreeRow[]>([]);
+  const [trees, setTrees] = useState<TreeRow[]>([]);
   const { user, isLoaded } = useUser();
 
   const searchParams = useSearchParams();
@@ -59,9 +60,6 @@ export default function TreeTable() {
   const idxLastTree = currentPage * treesPerPage;
   const idxFirstTree = idxLastTree - treesPerPage;
   const paginatedTrees = filteredTrees.slice(idxFirstTree, idxLastTree);
-  const [profileURL, setProfileURL] = useState("");
-  const [collectorProfiles, setCollectorProfiles] = useState<{ [key: string]: string }>({});
-  const hasCustomProfileURL = (url?: string) => !!url && url.trim() !== "" && url !== "/pfp.png";
 
   // fetch trees
   const [isClient, setIsClient] = useState(false);
@@ -112,14 +110,6 @@ export default function TreeTable() {
 
     const fetchData = async () => {
       try {
-        // Fetch user data
-        const encodedEmail = encodeURIComponent(user.primaryEmailAddress?.emailAddress || "");
-        const userRes = await fetch(`/api/user?email=${encodedEmail}`);
-        if (!userRes.ok) throw new Error(`User fetch failed: ${userRes.status}`);
-        const userData = await userRes.json();
-
-        setProfileURL(userData.profileURL);
-
         // Fetch trees based on role:
         // Clerk org admin is the source of truth for admin privileges.
         const clerkRole = user.organizationMemberships?.[0]?.role;
@@ -135,7 +125,7 @@ export default function TreeTable() {
 
         if (actingAsVolunteer) {
           apiString = `/api/tree?collectorName=${user.fullName}`;
-        } else if (isClerkAdmin || userData?.role === "Admin") {
+        } else if (isClerkAdmin) {
           apiString = "/api/tree";
         } else {
           throw new Error("Role not found");
@@ -143,41 +133,11 @@ export default function TreeTable() {
 
         const treesRes = await fetch(apiString);
         if (!treesRes.ok) throw new Error(`Trees fetch failed: ${treesRes.status}`);
-        const treesData = await treesRes.json();
+        const treesData: TreeRow[] = await treesRes.json();
 
         if (Array.isArray(treesData)) {
           setTrees(treesData);
           setFilteredTrees(treesData);
-
-          // fetch profile pics
-          const uniqueCollectors = Array.from(new Set(treesData.map((tree: ITree) => tree.collectorName)));
-          const profilePromises = uniqueCollectors.map(async (collectorName) => {
-            try {
-              const encodedName = encodeURIComponent(collectorName);
-              const profileRes = await fetch(`/api/user/by-name/${encodedName}`);
-              if (profileRes.ok) {
-                const profileData = await profileRes.json();
-                return {
-                  name: collectorName,
-                  profileURL: hasCustomProfileURL(profileData.profileURL) ? profileData.profileURL : "",
-                };
-              }
-            } catch (error) {
-              console.error(`Failed to fetch profile for ${collectorName}:`, error);
-            }
-            return { name: collectorName, profileURL: "" };
-          });
-
-          const profileResults = await Promise.all(profilePromises);
-          const profileMap = profileResults.reduce(
-            (acc, result) => {
-              acc[result.name] = result.profileURL;
-              return acc;
-            },
-            {} as { [key: string]: string },
-          );
-
-          setCollectorProfiles(profileMap);
         }
       } catch (err) {
         console.error("Fetch error:", err);
@@ -514,7 +474,7 @@ export default function TreeTable() {
                                         <Avatar
                                           name={tree.collectorName}
                                           boxSize={8}
-                                          src={collectorProfiles[tree.collectorName] || undefined}
+                                          src={tree.collectorProfileURL || undefined}
                                         />
                                         <Text>{tree.collectorName}</Text>
                                       </HStack>

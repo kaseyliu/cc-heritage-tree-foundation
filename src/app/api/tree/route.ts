@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/database/db";
 import Tree from "@/database/treeSchema";
+import User from "@/database/userSchema";
 import s3 from "@/app/api/tree/aws";
 import { revalidateTag } from "next/cache";
 import mongoose from "mongoose";
@@ -187,6 +188,19 @@ export async function GET(request: Request) {
       : {};
     const trees = await Tree.find(query).lean();
 
+    const collectorNames = Array.from(
+      new Set(trees.map((tree: any) => tree.collectorName).filter((name: string | undefined) => !!name)),
+    );
+    const users = await User.find({ name: { $in: collectorNames } }, { name: 1, profileURL: 1, _id: 0 }).lean();
+    const collectorProfileMap = users.reduce(
+      (acc: Record<string, string>, user: any) => {
+        const profileURL = user?.profileURL;
+        acc[user.name] = profileURL && profileURL !== "/pfp.png" ? profileURL : "";
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
+
     const serialized = trees.map((tree) => ({
       ...tree,
       gpsCoordinates: tree.gpsCoordinates.map((coord: any) => coord.toString()),
@@ -195,6 +209,7 @@ export async function GET(request: Request) {
       treeHeight: tree.treeHeight.toString(),
       treeQuality: tree.treeQuality.toString(),
       photos: tree.photo?.map((p: any) => p?.toString()),
+      collectorProfileURL: collectorProfileMap[tree.collectorName] || "",
     }));
 
     return NextResponse.json(serialized, { status: 200 });
