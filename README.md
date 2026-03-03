@@ -15,7 +15,7 @@ The Central Coast Heritage Tree Foundation focuses on the protection, preservati
 
 ### Purpose
 
-The goal is to build upon last year’s project by creating a user-friendly interface that allows volunteers to collect and enter tree inventory data directly into a digital system. This data will then be displayed on an interactive map, accessible to other volunteers with permissions, and available for public viewing on the website.
+The goal is to create a user-friendly interface that allows volunteers to collect and enter tree inventory data directly into a digital system. This data will then be displayed on an interactive map, accessible to other volunteers with permissions, and available for public viewing on the website.
 
 Additionally, the organization would like the application to feature an interactive map showcasing all heritage trees in the area. Users will be able to look up existing trees, explore their history, and use this information to make informed decisions about future planting locations.
 
@@ -41,5 +41,3 @@ The Central Coast Heritage Tree Foundation team consists of 14 Cal Poly students
 ## Getting Started And Contributing
 
 Visit [getting-started.md](docs/getting-started.md) on info for how to set up this repo.
-
-Visit [contributing.md](docs/contributing.md) on info for how to contribute to this repo.
