@@ -436,7 +436,7 @@ export default function TreeTable() {
                             </Thead>
                             <Tbody>
                               {paginatedTrees.length > 0 ? (
-                                paginatedTrees.map((tree: ITree, index) => (
+                                paginatedTrees.map((tree: TreeRow, index) => (
                                   <Tr key={tree._id}>
                                     <Td>{getTreeId(tree.treeId)}</Td>
                                     <Td>
