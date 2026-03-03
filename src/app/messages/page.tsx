@@ -83,9 +83,8 @@ function Messages() {
   const isAdmin = role === "org:admin";
   const [unreadCount, setUnreadCount] = useState(0);
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [senderProfiles, setSenderProfiles] = useState<{ [key: string]: string }>({});
-  const [profileRefreshTick, setProfileRefreshTick] = useState(0);
   const normalize = (value?: string | null) => (value || "").trim().toLowerCase();
+  const hasCustomProfileURL = (url?: string) => !!url && url.trim() !== "" && url !== "/pfp.png";
 
   const fetchMessages = async () => {
     try {
@@ -186,9 +185,12 @@ function Messages() {
       const senderName = customEvent.detail?.name || user?.fullName;
 
       if (newUrl && senderName) {
-        setSenderProfiles((prev) => ({ ...prev, [senderName]: newUrl }));
+        setMessages((prev) =>
+          prev.map((message) =>
+            normalize(message.from) === normalize(senderName) ? { ...message, senderProfileURL: newUrl } : message,
+          ),
+        );
       }
-      setProfileRefreshTick((prev) => prev + 1);
     };
 
     window.addEventListener("profile-photo-updated", handleProfilePhotoUpdated as EventListener);
@@ -196,47 +198,6 @@ function Messages() {
       window.removeEventListener("profile-photo-updated", handleProfilePhotoUpdated as EventListener);
     };
   }, [user?.fullName]);
-
-  useEffect(() => {
-    const fetchSenderProfiles = async () => {
-      if (messages.length === 0) return;
-
-      try {
-        // fetch profile pics
-        const uniqueSenders = Array.from(new Set(messages.map((message) => message.from)));
-        const profilePromises = uniqueSenders.map(async (senderName) => {
-          try {
-            const encodedName = encodeURIComponent(senderName);
-            const profileRes = await fetch(`/api/user/by-name/${encodedName}?t=${profileRefreshTick}`, {
-              cache: "no-store",
-            });
-            if (profileRes.ok) {
-              const profileData = await profileRes.json();
-              return { name: senderName, profileURL: profileData.profileURL || "" };
-            }
-          } catch (error) {
-            console.error(`Failed to fetch profile for ${senderName}:`, error);
-          }
-          return { name: senderName, profileURL: "" };
-        });
-
-        const profileResults = await Promise.all(profilePromises);
-        const profileMap = profileResults.reduce(
-          (acc, result) => {
-            acc[result.name] = result.profileURL;
-            return acc;
-          },
-          {} as { [key: string]: string },
-        );
-
-        setSenderProfiles(profileMap);
-      } catch (error) {
-        console.error("Failed to fetch sender profiles:", error);
-      }
-    };
-
-    fetchSenderProfiles();
-  }, [messages, profileRefreshTick]);
 
   useEffect(() => {
     if (message_id && messages.length > 0) {
@@ -499,7 +460,11 @@ function Messages() {
                                   onClick={() => setSelectedMessage(msg)}
                                 >
                                   <Flex className={styles.avatarContainer}>
-                                    <Avatar src={senderProfiles[msg.from] || undefined} name={msg.from} size="sm" />
+                                    <Avatar
+                                      src={hasCustomProfileURL(msg.senderProfileURL) ? msg.senderProfileURL : undefined}
+                                      name={msg.from}
+                                      size="sm"
+                                    />
                                     {msg.from}
                                   </Flex>
                                 </Td>
@@ -623,7 +588,11 @@ function Messages() {
                                   onClick={() => setSelectedMessage(msg)}
                                 >
                                   <Flex className={styles.avatarContainer}>
-                                    <Avatar src={senderProfiles[msg.from] || undefined} name={msg.from} size="sm" />
+                                    <Avatar
+                                      src={hasCustomProfileURL(msg.senderProfileURL) ? msg.senderProfileURL : undefined}
+                                      name={msg.from}
+                                      size="sm"
+                                    />
                                     {msg.from}
                                   </Flex>
                                 </Td>

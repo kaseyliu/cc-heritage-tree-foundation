@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Announcement from "@/database/announcementSchema";
+import User from "@/database/userSchema";
 import s3 from "@/app/api/tree/aws";
 import connectDB from "@/database/db";
 
@@ -90,8 +91,33 @@ export async function GET(req: NextRequest) {
   await connectDB();
 
   try {
-    const announcements = await Announcement.find();
-    return NextResponse.json(announcements, { status: 200 });
+    const announcements = await Announcement.find().lean();
+
+    const senderNames = Array.from(
+      new Set(
+        announcements
+          .map((announcement: any) => announcement.from)
+          .filter((name: string | undefined) => !!name && name.trim() !== ""),
+      ),
+    );
+
+    const users = await User.find({ name: { $in: senderNames } }, { name: 1, profileURL: 1, _id: 0 }).lean();
+
+    const profileMap = users.reduce(
+      (acc: Record<string, string>, user: any) => {
+        const profileURL = user?.profileURL;
+        acc[user.name] = profileURL && profileURL !== "/pfp.png" ? profileURL : "";
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
+
+    const enrichedAnnouncements = announcements.map((announcement: any) => ({
+      ...announcement,
+      senderProfileURL: profileMap[announcement.from] || "",
+    }));
+
+    return NextResponse.json(enrichedAnnouncements, { status: 200 });
   } catch (err) {
     return NextResponse.json("Failed to fetch announcements: " + err, { status: 400 });
   }
