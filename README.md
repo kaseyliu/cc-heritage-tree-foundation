@@ -39,5 +39,6 @@ The Central Coast Heritage Tree Foundation team consists of 14 Cal Poly students
 - [Thomas Le](https://www.linkedin.com/) - Software Developer
 
 ## Getting Started And Contributing
+Visit [architecture.md](docs/architecture.md) for info about this repo's system design/architecture.
 
 Visit [getting-started.md](docs/getting-started.md) on info for how to set up this repo.
