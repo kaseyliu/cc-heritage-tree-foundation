@@ -2,6 +2,30 @@
 
 This document describes the project architecture using a lightweight C4 approach.
 
+## 0) Design Decisions
+
+This stack was selected to balance speed of delivery, developer onboarding, and production readiness for a real nonprofit use case.
+
+- `TypeScript`
+  - Chosen for end-to-end type safety across pages, API handlers, and shared data models.
+  - Reduced runtime mistakes during rapid iteration and made refactors safer for junior contributors.
+- `Next.js (App Router + Route Handlers)`
+  - Chosen to keep frontend and backend in one project with minimal operational overhead.
+  - Enabled fast feature delivery without maintaining a separate API server/repo.
+  - Supported progressive optimization from simple routes to richer API responses as performance needs evolved.
+- `MongoDB + Mongoose`
+  - Chosen for flexible document modeling to handle tree records and related metadata that can evolve over time.
+  - Fit well with JSON-like payloads from forms and route handlers.
+  - Allowed incremental schema evolution while preserving developer velocity.
+- `AWS S3`
+  - Chosen for durable, scalable storage of photos and attachments outside the application server.
+  - Decoupled large binary file handling from core database operations.
+  - Supported straightforward URL-based rendering and bucket-level policy controls.
+- `Clerk`
+  - Chosen for production-ready authentication and user/session security out of the box.
+  - Organization roles (`org:admin`, `org:member`) simplified role-based UI/route behavior.
+  - Avoided building and securing custom auth flows from scratch, keeping focus on product features.
+
 ## 1) System Context
 
 ```mermaid
