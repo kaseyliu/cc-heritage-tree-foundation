@@ -58,11 +58,15 @@ const CreateAnnouncement = () => {
   }
 
   const isAdmin = role === "org:admin";
-  if (!isAdmin) {
-    router.push("/volunteerDashboard");
-  }
+  useEffect(() => {
+    if (isLoaded && !isAdmin) {
+      router.push("/volunteerDashboard");
+    }
+  }, [isLoaded, isAdmin, router]);
 
   useEffect(() => {
+    if (!isLoaded || !isAdmin) return;
+
     const fetchUsers = async () => {
       try {
         const res = await fetch("/api/user");
@@ -79,7 +83,7 @@ const CreateAnnouncement = () => {
       }
     };
     fetchUsers();
-  }, []);
+  }, [isLoaded, isAdmin]);
 
   useEffect(() => {
     setFormData((prev) => ({

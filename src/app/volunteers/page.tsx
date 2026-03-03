@@ -53,9 +53,11 @@ function Volunteers() {
   }
 
   const isAdmin = role === "org:admin";
-  if (!isAdmin) {
-    router.push("/volunteerDashboard");
-  }
+  useEffect(() => {
+    if (isLoaded && !isAdmin) {
+      router.push("/volunteerDashboard");
+    }
+  }, [isLoaded, isAdmin, router]);
 
   function formatPhoneNumber(phoneNumber: string): string {
     const digits = phoneNumber.replace(/\D/g, "");
@@ -72,6 +74,8 @@ function Volunteers() {
 
   //fetch users
   useEffect(() => {
+    if (!isLoaded || !isAdmin) return;
+
     const fetchUsers = async () => {
       try {
         const response = await fetch("/api/user");
@@ -113,7 +117,7 @@ function Volunteers() {
     };
 
     fetchUsers();
-  }, []);
+  }, [isLoaded, isAdmin]);
   //Search Filter
   const handleSearch = (e: React.KeyboardEvent<HTMLInputElement> | React.MouseEvent) => {
     if (!searchTerm.trim()) {

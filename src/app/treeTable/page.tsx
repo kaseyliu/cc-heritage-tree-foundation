@@ -111,7 +111,8 @@ export default function TreeTable() {
     const fetchData = async () => {
       try {
         // Fetch user data
-        const userRes = await fetch(`/api/user?email=${user.primaryEmailAddress?.emailAddress}`);
+        const encodedEmail = encodeURIComponent(user.primaryEmailAddress?.emailAddress || "");
+        const userRes = await fetch(`/api/user?email=${encodedEmail}`);
         if (!userRes.ok) throw new Error(`User fetch failed: ${userRes.status}`);
         const userData = await userRes.json();
 

@@ -24,7 +24,7 @@ export default function SignupRedirect() {
               name: user.fullName,
               email: user.primaryEmailAddress?.emailAddress,
               role: "Volunteer",
-              phoneNumber: user.phoneNumbers[0].phoneNumber,
+              phoneNumber: user.phoneNumbers?.[0]?.phoneNumber || "",
               active: true,
             }),
           });

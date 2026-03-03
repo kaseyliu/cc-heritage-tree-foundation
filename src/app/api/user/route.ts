@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/database/db";
 import User, { IUser } from "@/database/userSchema";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 
 // get all users
 export async function GET(request: NextRequest) {
@@ -11,7 +12,41 @@ export async function GET(request: NextRequest) {
     const email = searchParams.get("email");
 
     if (email) {
-      const user = await User.findOne({ email }).lean();
+      const normalizedEmail = decodeURIComponent(email).trim().toLowerCase();
+      let user = await User.findOne({ email: normalizedEmail }).lean();
+
+      // First-login fallback: if the user doesn't exist in Mongo yet,
+      // create one from Clerk user data on the server.
+      if (!user) {
+        const { userId } = await auth();
+
+        if (userId) {
+          const client = clerkClient();
+          const clerkUser = await client.users.getUser(userId);
+          const clerkEmail = clerkUser.primaryEmailAddress?.emailAddress?.toLowerCase();
+
+          if (clerkEmail === normalizedEmail) {
+            const createdUser = await User.findOneAndUpdate(
+              { email: normalizedEmail },
+              {
+                $setOnInsert: {
+                  name: clerkUser.fullName || clerkUser.firstName || normalizedEmail,
+                  email: normalizedEmail,
+                  role: "Volunteer",
+                  active: true,
+                },
+                $set: {
+                  phoneNumber: clerkUser.phoneNumbers?.[0]?.phoneNumber || "",
+                },
+              },
+              { upsert: true, new: true },
+            );
+
+            user = createdUser?.toObject() ?? null;
+          }
+        }
+      }
+
       if (!user) {
         return NextResponse.json({ message: "User not found" }, { status: 404 });
       }
@@ -30,8 +65,25 @@ export async function POST(req: Request) {
 
   try {
     const userData = await req.json();
-    const newUser = new User(userData);
-    await newUser.save();
+    const normalizedEmail = userData?.email?.toLowerCase()?.trim();
+    if (!normalizedEmail) {
+      return NextResponse.json({ message: "Email is required" }, { status: 400 });
+    }
+
+    const newUser = await User.findOneAndUpdate(
+      { email: normalizedEmail },
+      {
+        $set: {
+          name: userData?.name || normalizedEmail,
+          email: normalizedEmail,
+          role: userData?.role || "Volunteer",
+          phoneNumber: userData?.phoneNumber || "",
+          active: userData?.active ?? true,
+          profileURL: userData?.profileURL || "",
+        },
+      },
+      { upsert: true, new: true },
+    );
 
     return NextResponse.json({ message: "User created successfully", user: newUser }, { status: 201 });
   } catch (err) {

@@ -101,11 +101,15 @@ function AdminDashboard() {
   }
 
   const isAdmin = role === "org:admin";
-  if (!isAdmin) {
-    router.push("/volunteerDashboard");
-  }
+  useEffect(() => {
+    if (isLoaded && !isAdmin) {
+      router.push("/volunteerDashboard");
+    }
+  }, [isLoaded, isAdmin, router]);
 
   useEffect(() => {
+    if (!isLoaded || !isAdmin) return;
+
     const fetchAllTreeData = async () => {
       try {
         const response = await fetch("/api/tree");
@@ -150,7 +154,7 @@ function AdminDashboard() {
     };
 
     fetchAllTreeData();
-  }, [currentMonth, currentYear]);
+  }, [currentMonth, currentYear, isLoaded, isAdmin]);
 
   useEffect(() => {
     setIsClient(true);
