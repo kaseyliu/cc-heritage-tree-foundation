@@ -42,6 +42,28 @@ export default function ProfileCard() {
     fetchUserData();
   }, [isLoaded, user]);
 
+  useEffect(() => {
+    const handleProfilePhotoUpdated = (event: Event) => {
+      const customEvent = event as CustomEvent<{ url?: string }>;
+      const newUrl = customEvent.detail?.url;
+      if (!newUrl) return;
+
+      setUserData((prev) => ({
+        ...(prev || {
+          name: "",
+          email: "",
+          role: "Volunteer",
+        }),
+        profileURL: newUrl,
+      }));
+    };
+
+    window.addEventListener("profile-photo-updated", handleProfilePhotoUpdated as EventListener);
+    return () => {
+      window.removeEventListener("profile-photo-updated", handleProfilePhotoUpdated as EventListener);
+    };
+  }, []);
+
   return (
     <SignedIn>
       <Flex

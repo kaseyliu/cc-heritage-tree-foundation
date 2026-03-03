@@ -278,14 +278,18 @@ export default function EditUserProfile() {
       });
 
       if (response.ok) {
-        showToast("Upload successful!", "success");
+        showToast("Profile picture uploaded successfully!", "success");
 
         // update profileURL
         const data = await response.json();
         setProfileURL(data.url);
       } else {
-        showToast("Upload failed!", "error");
+        const err = await response.json().catch(() => ({}));
+        showToast(err?.details || err?.error || "Profile picture upload failed!", "error");
       }
+    } catch (error) {
+      console.error("Upload error:", error);
+      showToast("Profile picture upload failed!", "error");
     } finally {
       setUploading(false);
     }

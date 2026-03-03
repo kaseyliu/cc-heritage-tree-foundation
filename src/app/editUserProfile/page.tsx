@@ -126,11 +126,12 @@ export default function EditUserProfile() {
         setProfileURL(data.url);
         showToast("Profile picture uploaded successfully!", "success");
       } else {
-        showToast("Upload failed!", "error");
+        const err = await response.json().catch(() => ({}));
+        showToast(err?.details || err?.error || "Profile picture upload failed!", "error");
       }
     } catch (error) {
       console.error("Upload error:", error);
-      showToast("Upload failed!", "error");
+      showToast("Profile picture upload failed!", "error");
     } finally {
       setUploading(false);
     }
@@ -245,6 +246,9 @@ export default function EditUserProfile() {
 
       // If we get here, both updates succeeded
       showToast("Profile updated successfully in both systems!", "success");
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("profile-photo-updated", { detail: { url: profileURL } }));
+      }
 
       // Update the original data to reflect the changes
       const newOriginalData = {
